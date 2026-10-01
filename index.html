@@ -1,0 +1,88 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="index, nofollow"><title>Mission E-Reporting</title><style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f0f8f7;--card:#fff;--tx:#12302e;--mu:#58716f;--pr:#0f766e;--pr2:#0a5b55;--ln:#cfe3e1;--bad:#b42318;--ok:#067647}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1f1e;--card:#12302e;--tx:#e6f4f2;--mu:#9bbab6;--pr:#2dd4bf;--pr2:#5eead4;--ln:#25504c;--bad:#f97066;--ok:#47cd89}}
+:root[data-theme="dark"]{--bg:#0c1f1e;--card:#12302e;--tx:#e6f4f2;--mu:#9bbab6;--pr:#2dd4bf;--pr2:#5eead4;--ln:#25504c;--bad:#f97066;--ok:#47cd89}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:18px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:#0f766e;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.5rem}header span{opacity:.85;font-size:.95rem}
+nav{display:flex;gap:8px}
+nav button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:1rem;cursor:pointer}
+nav button.on{background:#fff;color:#0f766e;font-weight:700}
+main{max-width:960px;margin:0 auto;padding:20px 16px 48px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:20px;margin-bottom:18px}
+h2{margin:0 0 12px;font-size:1.35rem}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input,select{width:100%;font-size:1.1rem;padding:14px;border:2px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--tx)}
+input:focus,select:focus{outline:none;border-color:var(--pr)}
+input[readonly]{font-weight:700;color:var(--pr)}
+.row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:12px;padding:16px 22px;font-size:1.1rem;font-weight:700;cursor:pointer;width:100%;margin-top:20px}
+.btn.alt{background:transparent;color:var(--pr);border:2px solid var(--pr)}
+.btn.sm{width:auto;margin:0;padding:12px 18px}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#06201e}}
+.msg{padding:12px 14px;border-radius:12px;margin-top:14px;font-weight:600}
+.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.okm{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}dt{color:var(--mu)}dd{margin:0;font-weight:700;text-align:right}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--bg);border-radius:12px;padding:14px}.kpi small{color:var(--mu);display:block}.kpi b{font-size:1.4rem;color:var(--pr)}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--ln);white-space:nowrap}th{color:var(--mu)}td.n,th.n{text-align:right}
+.bar{display:flex;align-items:center;gap:10px;margin:8px 0}.bar i{display:block;height:20px;background:var(--pr);border-radius:6px;min-width:2px}.bar span{min-width:110px}
+.hide{display:none}.li{display:flex;gap:10px;margin:8px 0;align-items:center}.li input{flex:1}.off input{opacity:.55;text-decoration:line-through}.mu{color:var(--mu)}
+</style></head><body><header><div><h1>🩺 Mission E-Reporting</h1><span>Field sales &amp; collection reports</span></div></header><main><section id="agent">
+<div class="card" id="formCard"><h2>New report</h2>
+<label for="name">Agent / info name *</label><select id="name"><option value="">Select agent</option></select>
+<label for="site">Site or location *</label><select id="site"><option value="">Select site</option></select>
+<p class="mu" style="margin:0">All fields marked * are required. <span id="curnote"></span></p><div id="cfgnote" class="msg err hide">Sites and approved agents have not been set up yet. Please contact your admin.</div><div class="row"><div><label for="date">Report date *</label><input id="date" type="date"></div>
+<div><label for="pat">Total patients *</label><input id="pat" type="number" inputmode="numeric" min="0" step="1" placeholder="0"></div></div>
+<div class="row"><div><label for="cash">Cash amount *</label><input id="cash" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" required></div>
+<div><label for="gcash">GCash amount *</label><input id="gcash" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" required></div></div>
+<div class="row"><div><label for="gross">Gross amount (Cash + GCash)</label><input id="gross" readonly value="0.00"></div>
+<div><label for="exp">Total expense *</label><input id="exp" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" required></div></div>
+<label for="net">Net amount (auto)</label><input id="net" readonly value="0.00">
+<div id="fmsg"></div>
+<button class="btn" id="review">Review &amp; Submit</button></div>
+<div class="card hide" id="revCard"><h2>Please confirm</h2><dl id="revList"></dl><div id="smsg"></div>
+<button class="btn" id="confirm">Confirm &amp; Submit</button><button class="btn alt" id="back">Edit</button></div>
+<div class="card hide" id="doneCard"><h2>✅ Report submitted</h2><p>Thank you! Your report was sent to the admin dashboard.</p><button class="btn" id="again">Submit another report</button></div>
+</section></main><script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=v=>String(v).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim();
+let CUR='PHP';
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:CUR}).format(Number(n)||0);
+const num=n=>(Number(n)||0).toLocaleString('en-US');
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const show=(id,v)=>$(id).classList.toggle('hide',!v);
+async function api(url,o={}){const r=await fetch(url,{method:o.method||'GET',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:o.body?JSON.stringify(o.body):undefined});
+ let j={};try{j=await r.json()}catch(e){}if(!r.ok){const e=new Error(j.error||'Request failed');e.status=r.status;throw e}return j}
+function popup(t,m){const o=document.createElement('div');o.setAttribute('role','alertdialog');
+ o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99';
+ o.innerHTML='<div style="background:var(--card);color:var(--tx);border-radius:16px;padding:24px;max-width:420px;width:100%;border-top:6px solid var(--bad)"><h2 style="color:var(--bad);margin:0 0 8px">⚠ '+esc(t)+'</h2><p style="margin:0 0 8px">'+esc(m)+'</p><button class="btn">OK</button></div>';
+ o.querySelector('button').onclick=()=>o.remove();document.body.appendChild(o);o.querySelector('button').focus()}
+let cfg={currency:'PHP',sites:[],agents:[]},pending=null;
+$('date').value=today();
+function calc(){const g=(+$('cash').value||0)+(+$('gcash').value||0);$('gross').value=money(g);$('net').value=money(g-(+$('exp').value||0))}
+['cash','gcash','exp'].forEach(i=>$(i).addEventListener('input',calc));
+function fill(id,list,ph){$(id).innerHTML='<option value="">'+ph+'</option>'+list.map(n=>'<option>'+esc(n)+'</option>').join('')}
+(async()=>{try{cfg=await api('/api/config');CUR=cfg.currency}catch(e){}
+ fill('name',cfg.agents,'Select agent');fill('site',cfg.sites,'Select site');
+ $('curnote').textContent='Amounts are in '+CUR+'.';show('cfgnote',!(cfg.sites.length&&cfg.agents.length));calc()})();
+$('review').onclick=()=>{
+ const name=$('name').value,site=$('site').value,pat=$('pat').value,ca=$('cash').value,gc=$('gcash').value,e=$('exp').value;
+ const bad=!name||!site||!$('date').value||pat===''||ca===''||gc===''||e===''||+pat<0||+ca<0||+gc<0||+e<0||!Number.isInteger(+pat);
+ if(bad){$('fmsg').innerHTML='<div class="msg err">All fields are required. Please complete every field with valid numbers (enter 0 if none).</div>';return}
+ $('fmsg').innerHTML='';
+ pending={info_name:name,site_location:site,report_date:$('date').value,total_patients:+pat,cash_amount:+ca,gcash_amount:+gc,total_expense:+e};
+ const g=pending.cash_amount+pending.gcash_amount;
+ $('revList').innerHTML=[['Name',esc(name)],['Site',esc(site)],['Date',pending.report_date],['Patients',num(pat)],['Cash',money(ca)],['GCash',money(gc)],['Gross',money(g)],['Expense',money(e)],['Net',money(g-pending.total_expense)]].map(r=>`<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join('');
+ $('smsg').innerHTML='';show('formCard',false);show('revCard',true)};
+$('back').onclick=()=>{show('revCard',false);show('formCard',true)};
+$('confirm').onclick=async()=>{const b=$('confirm');b.disabled=true;
+ try{await api('/api/reports',{method:'POST',body:pending});show('revCard',false);show('doneCard',true)}
+ catch(e){e.status===409?popup('Duplicate record already exist','A report with the same Report date, Agent and Site has already been submitted.'):popup('Could not submit',e.message)}
+ b.disabled=false};
+$('again').onclick=()=>{['name','site','pat','cash','gcash','exp'].forEach(i=>$(i).value='');$('date').value=today();calc();pending=null;show('doneCard',false);show('formCard',true)};
+</script></body></html>

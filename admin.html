@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="robots" content="noindex, nofollow"><title>Mission E-Reporting – Admin</title><style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f0f8f7;--card:#fff;--tx:#12302e;--mu:#58716f;--pr:#0f766e;--pr2:#0a5b55;--ln:#cfe3e1;--bad:#b42318;--ok:#067647}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1f1e;--card:#12302e;--tx:#e6f4f2;--mu:#9bbab6;--pr:#2dd4bf;--pr2:#5eead4;--ln:#25504c;--bad:#f97066;--ok:#47cd89}}
+:root[data-theme="dark"]{--bg:#0c1f1e;--card:#12302e;--tx:#e6f4f2;--mu:#9bbab6;--pr:#2dd4bf;--pr2:#5eead4;--ln:#25504c;--bad:#f97066;--ok:#47cd89}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*:before,*:after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--tx);font:18px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:#0f766e;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+header h1{margin:0;font-size:1.5rem}header span{opacity:.85;font-size:.95rem}
+nav{display:flex;gap:8px}
+nav button{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:1rem;cursor:pointer}
+nav button.on{background:#fff;color:#0f766e;font-weight:700}
+main{max-width:960px;margin:0 auto;padding:20px 16px 48px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:16px;padding:20px;margin-bottom:18px}
+h2{margin:0 0 12px;font-size:1.35rem}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input,select{width:100%;font-size:1.1rem;padding:14px;border:2px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--tx)}
+input:focus,select:focus{outline:none;border-color:var(--pr)}
+input[readonly]{font-weight:700;color:var(--pr)}
+.row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.btn{background:var(--pr);color:#fff;border:0;border-radius:12px;padding:16px 22px;font-size:1.1rem;font-weight:700;cursor:pointer;width:100%;margin-top:20px}
+.btn.alt{background:transparent;color:var(--pr);border:2px solid var(--pr)}
+.btn.sm{width:auto;margin:0;padding:12px 18px}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn{color:#06201e}}
+.msg{padding:12px 14px;border-radius:12px;margin-top:14px;font-weight:600}
+.err{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}.okm{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0}dt{color:var(--mu)}dd{margin:0;font-weight:700;text-align:right}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--bg);border-radius:12px;padding:14px}.kpi small{color:var(--mu);display:block}.kpi b{font-size:1.4rem;color:var(--pr)}
+.wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--ln);white-space:nowrap}th{color:var(--mu)}td.n,th.n{text-align:right}
+.bar{display:flex;align-items:center;gap:10px;margin:8px 0}.bar i{display:block;height:20px;background:var(--pr);border-radius:6px;min-width:2px}.bar span{min-width:110px}
+.hide{display:none}.li{display:flex;gap:10px;margin:8px 0;align-items:center}.li input{flex:1}.off input{opacity:.55;text-decoration:line-through}.mu{color:var(--mu)}
+</style></head><body><header><div><h1>🩺 Mission E-Reporting</h1><span>Admin</span></div>
+<nav id="app-nav" class="hide"><button id="tD" class="on">Dashboard</button><button id="tS">Settings</button><button id="lo">Log out</button></nav></header>
+<main>
+<div class="card" id="login"><h2>🔒 Admin login</h2><label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"><div id="lgMsg"></div><button class="btn" id="lgBtn">Log in</button></div>
+<div id="app" class="hide"><section id="dash"></section><section id="set" class="hide"></section></div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=v=>String(v).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g,' ').trim();
+let CUR='PHP';
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:CUR}).format(Number(n)||0);
+const num=n=>(Number(n)||0).toLocaleString('en-US');
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const show=(id,v)=>$(id).classList.toggle('hide',!v);
+async function api(url,o={}){const r=await fetch(url,{method:o.method||'GET',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:o.body?JSON.stringify(o.body):undefined});
+ let j={};try{j=await r.json()}catch(e){}if(!r.ok){const e=new Error(j.error||'Request failed');e.status=r.status;throw e}return j}
+function popup(t,m){const o=document.createElement('div');o.setAttribute('role','alertdialog');
+ o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:99';
+ o.innerHTML='<div style="background:var(--card);color:var(--tx);border-radius:16px;padding:24px;max-width:420px;width:100%;border-top:6px solid var(--bad)"><h2 style="color:var(--bad);margin:0 0 8px">⚠ '+esc(t)+'</h2><p style="margin:0 0 8px">'+esc(m)+'</p><button class="btn">OK</button></div>';
+ o.querySelector('button').onclick=()=>o.remove();document.body.appendChild(o);o.querySelector('button').focus()}
+const AGENT_URL=location.origin+'/';
+const CURS=[['PHP','₱ Philippine Peso (PHP)'],['USD','$ US Dollar (USD)'],['EUR','€ Euro (EUR)'],['GBP','£ British Pound (GBP)'],['JPY','¥ Japanese Yen (JPY)'],['SGD','S$ Singapore Dollar (SGD)'],['AUD','A$ Australian Dollar (AUD)'],['CAD','C$ Canadian Dollar (CAD)'],['AED','AED UAE Dirham'],['SAR','SAR Saudi Riyal']];
+let cfg={currency:'PHP',sites:[],agents:[]},reports=[],F={site:'',from:'',to:''},tab='D';
+function showLogin(){show('login',true);show('app',false);show('app-nav',false)}
+async function guard(fn){try{return await fn()}catch(e){if(e.status===401){showLogin();return}popup('Error',e.message)}}
+async function load(){cfg=await api('/api/config?full=1');CUR=cfg.currency;reports=await api('/api/reports')}
+async function enter(){await load();show('login',false);show('app',true);show('app-nav',true);setTab(tab)}
+$('lgBtn').onclick=async()=>{try{await api('/api/auth',{method:'POST',body:{password:$('pw').value}});$('pw').value='';$('lgMsg').innerHTML='';await enter()}catch(e){$('lgMsg').innerHTML='<div class="msg err">'+esc(e.message)+'</div>'}};
+$('pw').addEventListener('keydown',e=>{if(e.key==='Enter')$('lgBtn').click()});
+$('lo').onclick=async()=>{await api('/api/auth',{method:'DELETE'});showLogin()};
+function setTab(t){tab=t;show('dash',t==='D');show('set',t==='S');$('tD').classList.toggle('on',t==='D');$('tS').classList.toggle('on',t==='S');t==='D'?renderDash():renderSet()}
+$('tD').onclick=()=>guard(async()=>{reports=await api('/api/reports');setTab('D')});$('tS').onclick=()=>setTab('S');
+const selCss='width:100%;font-size:1.1rem;padding:14px;border:2px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--tx)';
+function renderDash(){const el=$('dash');
+ const sites=[...new Set(reports.map(r=>r.site_location))].sort();
+ const rows=reports.filter(r=>(!F.site||r.site_location===F.site)&&(!F.from||r.report_date>=F.from)&&(!F.to||r.report_date<=F.to));
+ const sum=k=>rows.reduce((a,r)=>a+(+r[k]||0),0);
+ const by={};rows.forEach(r=>by[r.site_location]=(by[r.site_location]||0)+(+r.net_amount||0));
+ const bs=Object.entries(by).sort((a,b)=>b[1]-a[1]).slice(0,8),mx=Math.max(1,...bs.map(x=>Math.abs(x[1])));
+ el.innerHTML=`<div class="card"><h2>Filters</h2><div class="row">
+ <div><label>Site</label><select id="fs" style="${selCss}"><option value="">All sites</option>${sites.map(s=>`<option ${s===F.site?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+ <div><label>From</label><input id="ff" type="date" value="${F.from}"></div><div><label>To</label><input id="ft" type="date" value="${F.to}"></div></div>
+ <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px"><button class="btn sm" id="dl">⬇ Download CSV</button><button class="btn alt sm" id="rf">↻ Refresh</button></div></div>
+ <div class="card"><h2>Summary</h2><div class="kpis">
+ <div class="kpi"><small>Reports</small><b>${num(rows.length)}</b></div><div class="kpi"><small>Patients</small><b>${num(sum('total_patients'))}</b></div>
+ <div class="kpi"><small>Cash</small><b>${money(sum('cash_amount'))}</b></div><div class="kpi"><small>GCash</small><b>${money(sum('gcash_amount'))}</b></div>
+ <div class="kpi"><small>Gross</small><b>${money(sum('gross_amount'))}</b></div><div class="kpi"><small>Expense</small><b>${money(sum('total_expense'))}</b></div>
+ <div class="kpi"><small>Net</small><b>${money(sum('net_amount'))}</b></div></div></div>
+ <div class="card"><h2>Net by site</h2>${bs.length?bs.map(([s,v])=>`<div class="bar"><span>${esc(s)}</span><i style="width:${Math.max(2,Math.abs(v)/mx*55)}%"></i><b>${money(v)}</b></div>`).join(''):'<p class="mu">No data yet.</p>'}</div>
+ <div class="card"><h2>Reports</h2><div class="wrap"><table><tr><th>Date</th><th>Agent</th><th>Site</th><th class="n">Patients</th><th class="n">Cash</th><th class="n">GCash</th><th class="n">Gross</th><th class="n">Expense</th><th class="n">Net</th></tr>
+ ${rows.map(r=>`<tr><td>${esc(r.report_date)}</td><td>${esc(r.info_name)}</td><td>${esc(r.site_location)}</td><td class="n">${num(r.total_patients)}</td><td class="n">${money(r.cash_amount)}</td><td class="n">${money(r.gcash_amount)}</td><td class="n">${money(r.gross_amount)}</td><td class="n">${money(r.total_expense)}</td><td class="n">${money(r.net_amount)}</td></tr>`).join('')||'<tr><td colspan="9" class="mu">No reports match.</td></tr>'}</table></div></div>`;
+ $('fs').onchange=e=>{F.site=e.target.value;renderDash()};$('ff').onchange=e=>{F.from=e.target.value;renderDash()};$('ft').onchange=e=>{F.to=e.target.value;renderDash()};
+ $('rf').onclick=()=>guard(async()=>{reports=await api('/api/reports');renderDash()});
+ $('dl').onclick=()=>{const h=['id','info_name','site_location','report_date','total_patients','cash_amount','gcash_amount','gross_amount','total_expense','net_amount','submitted_at'];
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv=[h.join(',')].concat(rows.map(r=>h.map(k=>q(r[k])).join(','))).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));a.download='mission-e-reports-'+CUR+'-'+today()+'.csv';document.body.appendChild(a);a.click();a.remove()}}
+const uid=()=>Math.random().toString(36).slice(2,10);
+async function save(){await guard(async()=>{cfg=await api('/api/config',{method:'PUT',body:cfg});CUR=cfg.currency;renderSet()})}
+function listCard(title,k){return `<div class="card"><h2>${title}</h2>`+(cfg[k].map(x=>`<div class="li ${x.active?'':'off'}"><input data-k="${k}" data-id="${x.id}" value="${esc(x.name)}" aria-label="Rename"><button class="btn alt sm" data-t="${k}" data-id="${x.id}">${x.active?'Deactivate':'Activate'}</button></div>`).join('')||'<p class="mu">None yet.</p>')+`<div class="li"><input id="add_${k}" placeholder="Add new"><button class="btn sm" data-a="${k}">Add</button></div></div>`}
+function renderSet(){const el=$('set');
+ el.innerHTML=`<div class="card"><h2>Agent link</h2><p class="mu">Share this link or QR code with your approved agents. No sign-in is needed.</p><input id="lnk" readonly value="${esc(AGENT_URL)}"><button class="btn sm" id="cp" style="margin-top:12px">Copy Link</button><div id="cpm"></div><div id="qr" style="background:#fff;padding:12px;border-radius:12px;width:min(240px,100%);margin-top:16px"></div></div>
+ <div class="card"><h2>Currency</h2><select id="cur" style="${selCss}">${CURS.map(c=>`<option value="${c[0]}" ${c[0]===CUR?'selected':''}>${c[1]}</option>`).join('')}</select><p class="mu">Changes how amounts are displayed. Stored amounts are not converted.</p></div>`+listCard('Sites','sites')+listCard('Approved agents','agents');
+ try{const q=qrcode(0,'M');q.addData(AGENT_URL);q.make();$('qr').innerHTML=q.createSvgTag({cellSize:6,margin:0,scalable:true});const v=$('qr').querySelector('svg');if(v){v.style.width='100%';v.style.height='auto'}}catch(e){$('qr').outerHTML='<p class="mu">QR code could not load. Use the link above.</p>'}
+ $('cp').onclick=async()=>{let ok=false;try{await navigator.clipboard.writeText(AGENT_URL);ok=true}catch(e){try{$('lnk').select();ok=document.execCommand('copy')}catch(e2){}}
+  $('cpm').innerHTML=ok?'<div class="msg okm">Link copied!</div>':'<div class="msg err">Could not copy automatically. Select the link above and copy it.</div>'};
+ $('cur').onchange=e=>{cfg.currency=e.target.value;save()};
+ el.onchange=e=>{const t=e.target;if(!t.dataset.k)return;const n=t.value.trim(),list=cfg[t.dataset.k],it=list.find(x=>x.id===t.dataset.id);
+  if(!n||list.some(x=>x.id!==it.id&&norm(x.name)===norm(n))){popup('Invalid name','Names cannot be empty or duplicate.');t.value=it.name;return}
+  it.name=n;save()};
+ el.onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.t){const it=cfg[b.dataset.t].find(x=>x.id===b.dataset.id);it.active=!it.active;save()}
+  if(b.dataset.a){const k=b.dataset.a,i=$('add_'+k),n=i.value.trim();if(!n)return;
+   if(cfg[k].some(x=>norm(x.name)===norm(n))){popup('Already exists',n+' is already in the list.');return}
+   cfg[k].push({id:uid(),name:n,active:true});i.value='';save()}}}
+(async()=>{try{const a=await api('/api/auth');a.admin?await enter():showLogin()}catch(e){showLogin()}})();
+</script></body></html>
