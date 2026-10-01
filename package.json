@@ -1,0 +1,8 @@
+{
+  "name": "mission-e-reporting",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": { "postgres": "^3.4.4" },
+  "engines": { "node": ">=20" }
+}
